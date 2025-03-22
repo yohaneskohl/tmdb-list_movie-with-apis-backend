@@ -2,8 +2,9 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 const { JWT_SECRET_KEY } = process.env;
-const nodemailer = require("../utils/nodemailer");
+const { sendMail, getHTML } = require("../utils/nodemailer");
 const { formattedDate } = require("../utils/formattedDate");
 
 module.exports = {
@@ -38,7 +39,7 @@ module.exports = {
       });
       delete user.password;
 
-       const notification = await prisma.notification.create({
+      const notification = await prisma.notification.create({
         data: {
           title: "Welcome!",
           message: "Your account has been created successfully.",
@@ -47,7 +48,7 @@ module.exports = {
         },
       });
 
-      global.io.emit(`user-${user.id}`, notification)
+      global.io.emit(`user-${user.id}`, notification);
 
       res.status(201).json({
         status: true,
@@ -92,7 +93,7 @@ module.exports = {
         },
       });
 
-      global.io.emit(`user-${user.id}`, notification)
+      global.io.emit(`user-${user.id}`, notification);
 
       return res.status(201).json({
         status: true,
@@ -151,7 +152,9 @@ module.exports = {
       const token = jwt.sign({ email: findUser.email }, JWT_SECRET_KEY);
       const html = await nodemailer.getHTML("url-resetPass.ejs", {
         name: findUser.name,
-        url: `${req.protocol}://${req.get('host')}/api/v1/reset-pass?token=${token}`,
+        url: `${req.protocol}://${req.get(
+          "host"
+        )}/api/v1/reset-pass?token=${token}`,
       });
       await nodemailer.sendMail(email, "Email Forget Password", html);
       return res.status(200).json({
@@ -166,7 +169,7 @@ module.exports = {
     try {
       const { token } = req.query;
       const { password, passwordConfirmation } = req.body;
-  
+
       if (!password || !passwordConfirmation) {
         return res.status(400).json({
           status: false,
@@ -174,17 +177,18 @@ module.exports = {
           data: null,
         });
       }
-  
+
       if (password !== passwordConfirmation) {
         return res.status(401).json({
           status: false,
-          message: "Please ensure that the password and password confirmation match!",
+          message:
+            "Please ensure that the password and password confirmation match!",
           data: null,
         });
       }
-  
+
       let encryptedPassword = await bcrypt.hash(password, 10);
-  
+
       jwt.verify(token, JWT_SECRET_KEY, async (err, decoded) => {
         if (err) {
           return res.status(403).json({
@@ -193,11 +197,11 @@ module.exports = {
             data: null,
           });
         }
-  
+
         const updateUser = await prisma.user.update({
           where: { email: decoded.email },
           data: { password: encryptedPassword },
-          select: { id: true, name: true, email: true } 
+          select: { id: true, name: true, email: true },
         });
 
         const notification = await prisma.notification.create({
@@ -209,20 +213,19 @@ module.exports = {
           },
         });
 
-        global.io.emit(`user-${updateUser.id}`, notification)
-  
+        global.io.emit(`user-${updateUser.id}`, notification);
+
         res.status(200).json({
           status: true,
           message: "Your password has been updated successfully!",
           data: updateUser,
         });
       });
-      
     } catch (error) {
       next(error);
     }
   },
-  
+
   // GET Profile
   getProfile: async (req, res, next) => {
     try {
@@ -251,64 +254,124 @@ module.exports = {
     }
   },
 
-
   // UPDATE Profile
-updateProfile: async (req, res, next) => {
-  try {
-    const { id } = req.user;
-    const { name, email, bio } = req.body;
+  updateProfile: async (req, res, next) => {
+    try {
+      const { id } = req.user;
+      const { name, email, bio } = req.body;
 
-    console.log("User ID dari token:", id);
-    console.log("Data yang dikirim untuk update:", { name, email, bio });
+      console.log("User ID dari token:", id);
+      console.log("Data yang dikirim untuk update:", { name, email, bio });
 
-    if (!name && !email && !bio) {
-      return res.status(400).json({
-        status: false,
-        message: "At least one field (name, email, or bio) must be provided.",
-      });
-    }
-
-    if (email) {
-      const existingUser = await prisma.user.findUnique({ where: { email } });
-      if (existingUser && existingUser.id !== id) {
+      if (!name && !email && !bio) {
         return res.status(400).json({
           status: false,
-          message: "Email is already in use by another user.",
+          message: "At least one field (name, email, or bio) must be provided.",
         });
       }
+
+      if (email) {
+        const existingUser = await prisma.user.findUnique({ where: { email } });
+        if (existingUser && existingUser.id !== id) {
+          return res.status(400).json({
+            status: false,
+            message: "Email is already in use by another user.",
+          });
+        }
+      }
+
+      const user = await prisma.user.update({
+        where: { id },
+        data: { name, email, bio },
+        select: { id: true, name: true, email: true, bio: true },
+      });
+
+      console.log("User berhasil diupdate:", user);
+
+      const notification = await prisma.notification.create({
+        data: {
+          title: "Profile Updated",
+          message: "Your profile information has been updated successfully.",
+          createdDate: new Date().toISOString(),
+          user: { connect: { id: user.id } },
+        },
+      });
+
+      console.log("Notifikasi dibuat:", notification);
+
+      global.io.emit(`user-${user.id}`, notification);
+
+      res.status(200).json({
+        status: true,
+        message: "Profile updated successfully",
+        data: user,
+      });
+    } catch (error) {
+      console.error("Error saat update profile:", error);
+      next(error);
     }
+  },
 
-    const user = await prisma.user.update({
-      where: { id },
-      data: { name, email, bio },
-      select: { id: true, name: true, email: true, bio: true },
-    });
+  //  Google OAuth2 Login
+  googleOauth2: async (req, res, next) => {
+    try {
+      let user = req.user;
 
-    console.log("User berhasil diupdate:", user);
+      // Pastikan user ditemukan
+      if (!user) {
+        return res.status(400).json({ status: false, message: "User not found" });
+      }
 
-    const notification = await prisma.notification.create({
-      data: {
-        title: "Profile Updated",
-        message: "Your profile information has been updated successfully.",
-        createdDate: new Date().toISOString(),
-        user: { connect: { id: user.id } },
-      },
-    });
+      // Cek apakah user sudah memiliki password
+      const existingUser = await prisma.user.findUnique({
+        where: { id: user.id },
+      });
 
-    console.log("Notifikasi dibuat:", notification);
+      console.log("User data from database:", existingUser);
 
-    global.io.emit(`user-${user.id}`, notification);
+      if (!existingUser.password) {
+        console.log("Generating new password...");
 
-    res.status(200).json({
-      status: true,
-      message: "Profile updated successfully",
-      data: user,
-    });
-  } catch (error) {
-    console.error("Error saat update profile:", error);
-    next(error);
-  }
-},
+        const randomPassword = crypto.randomBytes(8).toString("hex");
+        const hashedPassword = await bcrypt.hash(randomPassword, 10);
 
+        user = await prisma.user.update({
+          where: { id: user.id },
+          data: { password: hashedPassword },
+        });
 
+        console.log(`Generated password for ${user.email}: ${randomPassword}`);
+
+        try {
+          const emailHTML = await getHTML("password-template.ejs", {
+            name: user.name,
+            password: randomPassword,
+          });
+
+          console.log("Sending email...");
+          await sendMail(user.email, "Your Temporary Password", emailHTML);
+          console.log("Email sent successfully.");
+        } catch (emailError) {
+          console.error("Failed to send email:", emailError.message);
+        }
+      }
+
+      // Buat token JWT
+      const token = jwt.sign(
+        { id: user.id, email: user.email, name: user.name },
+        JWT_SECRET_KEY,
+        { expiresIn: "7d" }
+      );
+
+      res.status(200).json({
+        status: true,
+        message: "Google OAuth2 login successful",
+        token,
+        user,
+      });
+    } catch (error) {
+      console.error("Error in Google OAuth2 login:", error.message);
+      next(error);
+    }
+  },
 };

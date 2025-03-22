@@ -8,9 +8,18 @@ const {
   resetPass,
   getProfile,
   updateProfile,
+  googleOauth2,
 } = require("../controllers/user.controllers");
+const passport = require("../utils/passport");
 
 const restrict = require("../middlewares/auth.middlewares");
+
+//  Google OAuth
+router.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
+router.get("/auth/google/callback", 
+  passport.authenticate("google", { failureRedirect: "/auth/google", session: false }), 
+  googleOauth2
+);
 
 
 // API Users

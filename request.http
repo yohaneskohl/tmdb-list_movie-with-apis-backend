@@ -13,13 +13,13 @@ POST http://localhost:3000/api/v1/auth/login
 Content-Type: application/json
 
 {
-    "email": "keviny@gmail.com",
-    "password": "123"
+    "email": "ykohleducation@gmail.com",
+    "password": "0da35eb3332d3ede"
 }
 
 ### login token
 GET http://localhost:3000/api/v1/auth/authenticate
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwibmFtZSI6Inlrb2hsIiwiZW1haWwiOiJrZXZpbnlAZ21haWwuY29tIiwiaWF0IjoxNzQxMTA3NTYxfQ.gqF45-t9JJV-xX21CEFdNFCKKuC72p9ozMkcbD43ZJ0
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibmFtZSI6Inlrb2hsIiwiZW1haWwiOiJrZXZpbnlAZ21haWwuY29tIiwiYmlvIjpudWxsLCJpYXQiOjE3NDI1NzE5MDd9.PiVts0LDkGHudyJj08hY0Cj6MTnrsITHEsvdqeNM4J0
 
 ### Get all user
 GET http://localhost:3000/api/v1/users
@@ -29,7 +29,7 @@ GET http://localhost:3000/api/v1/users?search=kevin
 
 ### profile
 GET http://localhost:3000/api/v1/profile
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MiwibmFtZSI6Inlrb2hsIiwiZW1haWwiOiJrZXZpbnlAZ21haWwuY29tIiwiYmlvIjpudWxsLCJpYXQiOjE3NDExOTE2NzJ9.gNQWhHXumijQ0uSNVGQQCE2opD_OSHy-83KPJ4MIy0Y
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibmFtZSI6Inlrb2hsIiwiZW1haWwiOiJrZXZpbnlAZ21haWwuY29tIiwiYmlvIjpudWxsLCJpYXQiOjE3NDI1NzE5MDd9.PiVts0LDkGHudyJj08hY0Cj6MTnrsITHEsvdqeNM4J0
 
 ### profile
 PUT http://localhost:3000/api/v1/profile
