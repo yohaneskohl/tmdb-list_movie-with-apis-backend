@@ -1,22 +1,21 @@
 const passport = require("passport");
 const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
-
 const GoogleStrategy = require("passport-google-oauth20").Strategy;
-const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URL } =
-  process.env;
+
+const prisma = new PrismaClient();
+const { GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REDIRECT_URL } = process.env;
 
 passport.use(
   new GoogleStrategy(
     {
       clientID: GOOGLE_CLIENT_ID,
       clientSecret: GOOGLE_CLIENT_SECRET,
-      callbackURL: GOOGLE_REDIRECT_URL,
-      scope: ["profile", "email"], // Ambil data profile dan email
+      callbackURL:GOOGLE_REDIRECT_URL,
+
+      scope: ["profile", "email"],
     },
-    async function (accessToken, refreshToken, profile, done) {
+    async (accessToken, refreshToken, profile, done) => {
       try {
-        // Pastikan profile.emails tersedia
         if (!profile.emails || profile.emails.length === 0) {
           return done(new Error("No email found in profile"), null);
         }
@@ -27,7 +26,7 @@ passport.use(
           where: { email },
           update: { googleid: profile.id },
           create: {
-            name: profile.name?.givenName || "",
+            name: profile.displayName || "",
             email,
             googleid: profile.id,
           },

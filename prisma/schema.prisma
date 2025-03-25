@@ -21,10 +21,14 @@ model User {
   avatar_url   String?
   googleid     String?
 
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
   notification Notification[]
 
   @@map("users")
 }
+
 
 model Notification {
   id          Int    @id @default(autoincrement())

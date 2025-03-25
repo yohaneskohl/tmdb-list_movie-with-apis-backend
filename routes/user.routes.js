@@ -4,36 +4,52 @@ const {
   login,
   auth,
   index,
-  forgetPass,
-  resetPass,
+  
+  resetPassword,
   getProfile,
   updateProfile,
-  googleOauth2,
+  setPassword,
 } = require("../controllers/user.controllers");
+
 const passport = require("../utils/passport");
-
 const restrict = require("../middlewares/auth.middlewares");
+const { googleCallback } = require("../controllers/oauth.controllers");
 
-//  Google OAuth
-router.get("/auth/google", passport.authenticate("google", { scope: ["profile", "email"] }));
-router.get("/auth/google/callback", 
-  passport.authenticate("google", { failureRedirect: "/auth/google", session: false }), 
-  googleOauth2
+// // 🔹 Google OAuth 
+// router.get(
+//   "/auth/google/json",
+//   passport.authenticate("google", { scope: ["profile", "email"] })
+// );
+// router.get(
+//   "/auth/google/json/callback",
+//   passport.authenticate("google", { failureRedirect: "/auth/google/json", session: false }),
+//   googleCallback
+// );
+
+// 🔹 Google OAuth 
+router.get(
+  "/auth/google",
+  passport.authenticate("google", { scope: ["profile", "email"] })
+);
+router.get(
+  "/auth/google/callback",
+  passport.authenticate("google", { failureRedirect: "/login", session: false }),
+  googleCallback
 );
 
-
-// API Users
+// 🔹 API Users
 router.get("/users", index);
 
-// API Auth
+// 🔹 API Auth
 router.post("/auth/register", register);
 router.post("/auth/login", login);
 router.get("/auth/authenticate", restrict, auth);
 
-// API Forget Password Email
-router.post("/forget-pass", forgetPass);
-router.post("/reset-pass", resetPass);
+// 🔹 API Forget Password
+router.post("/reset-password", resetPassword);
+router.post("/set-password", restrict, setPassword);
 
+// 🔹 API Profile
 router.get("/profile", restrict, getProfile);
 router.put("/profile", restrict, updateProfile);
 
