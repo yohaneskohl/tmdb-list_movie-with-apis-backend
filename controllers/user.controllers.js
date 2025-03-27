@@ -231,7 +231,7 @@ module.exports = {
       const { id } = req.user;
       const user = await prisma.user.findUnique({
         where: { id },
-        select: { id: true, name: true, email: true, bio: true },
+        select: { id: true, name: true, email: true, bio: true, address: true, occupation: true },
       });
 
       if (!user) {
@@ -255,9 +255,9 @@ module.exports = {
   updateProfile: async (req, res, next) => {
     try {
       const { id } = req.user;
-      const { name, email, bio } = req.body;
+      const { name, email, bio, address, occupation } = req.body;
 
-      if (!name && !email && !bio) {
+      if (!name && !email && !bio && !address && !occupation) {
         return res.status(400).json({
           status: false,
           message: "At least one field (name, email, or bio) must be provided.",
@@ -266,8 +266,8 @@ module.exports = {
 
       const user = await prisma.user.update({
         where: { id },
-        data: { name, email, bio },
-        select: { id: true, name: true, email: true, bio: true },
+        data: { name, email, bio, address, occupation },
+        select: { id: true, name: true, email: true, bio: true, address: true, occupation: true }, 
       });
 
       res.status(200).json({

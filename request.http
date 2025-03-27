@@ -13,7 +13,7 @@ POST http://localhost:3000/api/v1/auth/login
 Content-Type: application/json
 
 {
-    "email": "kevinyohanesteen@gmail.com",
+    "email": "keviny@gmail.com",
     "password": "123"
 }
 
@@ -29,17 +29,19 @@ GET http://localhost:3000/api/v1/users?search=kevin
 
 ### profile
 GET http://localhost:3000/api/v1/profile
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibmFtZSI6Inlrb2hsIiwiZW1haWwiOiJrZXZpbnlAZ21haWwuY29tIiwiYmlvIjpudWxsLCJhZGRyZXNzIjpudWxsLCJvY2N1cGF0aW9uIjpudWxsLCJhdmF0YXJfdXJsIjpudWxsLCJnb29nbGVpZCI6bnVsbCwiaWF0IjoxNzQyNzQxOTI2fQ.5Cj0QN7SGlkEzMU9qdBjBb1KHDiNX5AD5bN4U5fnO8g
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibmFtZSI6IktldmluIFkiLCJlbWFpbCI6ImtldmlueUBnbWFpbC5jb20iLCJiaW8iOiJJIGFtIGEgc29mdHdhcmUgZW5naW5lZXIiLCJhZGRyZXNzIjoiamwuIGphbGFuIiwib2NjdXBhdGlvbiI6InBvbGljaSIsImF2YXRhcl91cmwiOm51bGwsImdvb2dsZWlkIjoiMTE3ODE2MTM4NjEzNDMzMjAwODIzIiwiY3JlYXRlZEF0IjoiMjAyNS0wMy0yM1QxNTo1NTo0MC4wODhaIiwidXBkYXRlZEF0IjoiMjAyNS0wMy0yNlQxNjo1ODoxOS4zMzBaIiwiaWF0IjoxNzQzMDA4MzU2fQ.1RVpH4OW96hdNHUo2-3F2AmhK_JFlIJSEFIWUoStc0A
 
 ### profile
 PUT http://localhost:3000/api/v1/profile
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibmFtZSI6Inlrb2hsIiwiZW1haWwiOiJrZXZpbnlAZ21haWwuY29tIiwiYmlvIjpudWxsLCJhZGRyZXNzIjpudWxsLCJvY2N1cGF0aW9uIjpudWxsLCJhdmF0YXJfdXJsIjpudWxsLCJnb29nbGVpZCI6bnVsbCwiaWF0IjoxNzQyNzQxOTI2fQ.5Cj0QN7SGlkEzMU9qdBjBb1KHDiNX5AD5bN4U5fnO8g
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibmFtZSI6IktldmluIFlvaGFuZXMiLCJlbWFpbCI6ImtldmlueW9oYW5lc3RlZW5AZ21haWwuY29tIiwiYmlvIjoiaGFpIGhhaSIsImFkZHJlc3MiOm51bGwsIm9jY3VwYXRpb24iOm51bGwsImF2YXRhcl91cmwiOm51bGwsImdvb2dsZWlkIjoiMTE3ODE2MTM4NjEzNDMzMjAwODIzIiwiY3JlYXRlZEF0IjoiMjAyNS0wMy0yM1QxNTo1NTo0MC4wODhaIiwidXBkYXRlZEF0IjoiMjAyNS0wMy0yNlQxNjo0MjowMC4yMTZaIiwiaWF0IjoxNzQzMDA3MzYzfQ.eEIwP3WKz2HTLxQHO78jvDmYKsahizWV7Jg1mX1rMwU
 
 {
     "name": "Kevin Y",
     "email": "keviny@gmail.com",
-    "bio": "I am a software engineer"
+    "bio": "I am a software engineer",
+    "address": "Jakartaa",
+    "occupation": "Software Engineer"
 }
 
 ### oauth
