@@ -9,9 +9,10 @@ const routes = require("./routes");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const server = require('http').createServer(app);
+const server = require("http").createServer(app);
 global.io = require("socket.io")(server);
 
+// ✅ Init Sentry
 Sentry.init({
   dsn: SENTRY_DSN,
   integrations: [
@@ -31,21 +32,22 @@ app.use(express.urlencoded({ extended: true }));
 
 // ✅ Setup View Engine
 app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views")); // Tambahkan ini
+app.set("views", path.join(__dirname, "views"));
 
-global.io.on('connection', (socket) => {
-    console.log('a user connected');
-    socket.on('disconnect', () => {
-        console.log('user disconnected');
-    });
+// ✅ Socket.io connection
+global.io.on("connection", (socket) => {
+  console.log("a user connected");
+  socket.on("disconnect", () => {
+    console.log("user disconnected");
+  });
 });
 
-// ✅ Pindahkan ke bawah middleware agar bisa akses ejs dengan benar
+// ✅ Use all routes (including "/")
 app.use(routes);
 
 app.use(Sentry.Handlers.errorHandler());
 
-// 404 error handler
+// 404 handler
 app.use((req, res, next) => {
   res.status(404).json({
     status: false,
@@ -54,7 +56,7 @@ app.use((req, res, next) => {
   });
 });
 
-// 500 error handler
+// 500 handler
 app.use((err, req, res, next) => {
   console.log(err);
   res.status(500).json({
@@ -64,10 +66,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-app.get("/", (req, res) => {
-  res.send("<h1>✅ Backend is running</h1>");
-});
-
+// ✅ Start server
 server.listen(PORT, () => console.log("Listening on port", PORT));
 
 module.exports = app;
