@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "nodemon app.js",
     "start": "node app.js",
-    "build": "echo 'handled by vercel'",
+    "build": "prisma generate'",
     "vercel-build": "prisma generate"
   },
   "dependencies": {
