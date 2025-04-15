@@ -4,9 +4,10 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "start": "node app.js",
     "dev": "nodemon app.js",
-    "build": "prisma generate"
+    "start": "node app.js",
+    "build": "echo 'skip build, handled by Vercel'",
+    "vercel-build": "prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.5.0",
