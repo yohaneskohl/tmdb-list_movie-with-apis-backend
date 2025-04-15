@@ -9,8 +9,7 @@ Content-Type: application/json
 }
 
 ### Create User
-POST https://tmdb-list-movie-with-apis-backend.vercel.app
-/api/v1/auth/register
+POST https://tmdb-list-movie-with-apis-backend-3nvzjcil6.vercel.app/api/v1/auth/register
 Content-Type: application/json
 
 {
