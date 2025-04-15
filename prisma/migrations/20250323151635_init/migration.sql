@@ -1,9 +1,14 @@
 -- CreateTable
 CREATE TABLE "users" (
     "id" SERIAL NOT NULL,
-    "name" TEXT NOT NULL,
+    "name" TEXT,
     "email" TEXT NOT NULL,
-    "password" TEXT NOT NULL,
+    "password" TEXT,
+    "bio" TEXT,
+    "address" TEXT,
+    "occupation" TEXT,
+    "avatar_url" TEXT,
+    "googleid" TEXT,
 
     CONSTRAINT "users_pkey" PRIMARY KEY ("id")
 );

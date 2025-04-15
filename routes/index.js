@@ -6,6 +6,7 @@ const fs = require("fs");
 const path = require("path");
 
 const User = require("./user.routes")
+const Render = require("./render.routes")
 
 
 const swagger_path = path.resolve(__dirname, "../docs/api-docs.yaml");
@@ -17,5 +18,6 @@ router.use("/api-docs", swaggerUI.serve, swaggerUI.setup(swaggerDocument));
 
 // API
 router.use("/api/v1", User)
+router.use("/api/v1", Render)
 
 module.exports = router;

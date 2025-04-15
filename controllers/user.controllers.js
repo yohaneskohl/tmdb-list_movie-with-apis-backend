@@ -2,52 +2,39 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const { JWT_SECRET_KEY } = process.env;
 const nodemailer = require("../utils/nodemailer");
-const { formattedDate } = require("../utils/formattedDate");
+// const { formattedDate } = require("../utils/formattedDate");
+
+const { JWT_SECRET_KEY } = process.env;
 
 module.exports = {
   register: async (req, res, next) => {
     try {
       const { name, email, password } = req.body;
 
-      const exist = await prisma.user.findUnique({
-        where: { email },
-      });
-
       if (!name || !email || !password) {
         return res.status(400).json({
           status: false,
-          message: "Input must be required",
+          message: "All fields (name, email, password) are required!",
           data: null,
-        });
-      } else if (exist) {
-        return res.status(401).json({
-          status: false,
-          message: "Email already used!",
         });
       }
 
-      let encryptedPassword = await bcrypt.hash(password, 10);
+      const exist = await prisma.user.findUnique({ where: { email } });
+      if (exist) {
+        return res.status(401).json({
+          status: false,
+          message: "Email is already used!",
+        });
+      }
+
+      const hashedPassword = await bcrypt.hash(password, 10);
+
       const user = await prisma.user.create({
-        data: {
-          name,
-          email,
-          password: encryptedPassword,
-        },
+        data: { name, email, password: hashedPassword },
       });
+
       delete user.password;
-
-       const notification = await prisma.notification.create({
-        data: {
-          title: "Welcome!",
-          message: "Your account has been created successfully.",
-          createdDate: formattedDate(new Date()),
-          user: { connect: { id: user.id } },
-        },
-      });
-
-      global.io.emit(`user-${user.id}`, notification)
 
       res.status(201).json({
         status: true,
@@ -61,42 +48,42 @@ module.exports = {
 
   login: async (req, res, next) => {
     try {
-      let { email, password } = req.body;
-      let user = await prisma.user.findFirst({ where: { email } });
+      const { email, password } = req.body;
+      const user = await prisma.user.findUnique({ where: { email } });
+
       if (!user) {
         return res.status(400).json({
           status: false,
-          message: "invalid email or password",
+          message: "Invalid email or password",
           data: null,
         });
       }
 
-      let isPasswordCorrect = await bcrypt.compare(password, user.password);
+      // Jika user dari Google OAuth, arahkan untuk set password
+      if (!user.password) {
+        return res.status(403).json({
+          status: false,
+          message:
+            "This account was registered using Google OAuth. Please set your password first.",
+          data: null,
+        });
+      }
+
+      const isPasswordCorrect = await bcrypt.compare(password, user.password);
       if (!isPasswordCorrect) {
         return res.status(400).json({
           status: false,
-          message: "invalid email or password",
+          message: "Invalid email or password",
           data: null,
         });
       }
 
       delete user.password;
-      let token = jwt.sign(user, JWT_SECRET_KEY);
+      const token = jwt.sign(user, JWT_SECRET_KEY);
 
-      const notification = await prisma.notification.create({
-        data: {
-          title: "Successfully Login",
-          message: "Enjoy your access Web.",
-          createdDate: formattedDate(new Date()),
-          user: { connect: { id: user.id } },
-        },
-      });
-
-      global.io.emit(`user-${user.id}`, notification)
-
-      return res.status(201).json({
+      res.status(200).json({
         status: true,
-        message: "success",
+        message: "Login successful",
         data: { ...user, token },
       });
     } catch (error) {
@@ -118,42 +105,60 @@ module.exports = {
 
   index: async (req, res, next) => {
     try {
-      const { search } = req.query;
-
       const users = await prisma.user.findMany({
-        where: { name: { contains: search, mode: "insensitive" } },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          password: true,
+          bio: true,
+          address: true,
+          occupation: true,
+          avatar_url: true,
+          googleid: true,
+          // notification: {
+          //   select: {
+          //     id: true,
+          //     title: true,
+          //     message: true,
+          //     createdDate: true,
+          //   },
+          // },
+        },
       });
-      users.forEach((user) => {
-        delete user.password;
-      });
+  
       res.status(200).json({
         status: true,
-        message: "success",
+        message: "Success",
         data: users,
       });
     } catch (error) {
       next(error);
     }
   },
+  
 
   forgetPass: async (req, res, next) => {
     try {
       const { email } = req.body;
-      const findUser = await prisma.user.findUnique({ where: { email } });
+      const user = await prisma.user.findUnique({ where: { email } });
 
-      if (!findUser) {
+      if (!user) {
         return res.status(404).json({
           status: false,
-          message: "user not found",
+          message: "User not found",
           data: null,
         });
       }
-      const token = jwt.sign({ email: findUser.email }, JWT_SECRET_KEY);
+
+      const token = jwt.sign({ email: user.email }, JWT_SECRET_KEY);
       const html = await nodemailer.getHTML("url-resetPass.ejs", {
-        name: findUser.name,
-        url: `${req.protocol}://${req.get('host')}/api/v1/reset-pass?token=${token}`,
+        name: user.name,
+        url: `${req.protocol}://${req.get("host")}/api/v1/reset-pass?token=${token}`,
       });
+
       await nodemailer.sendMail(email, "Email Forget Password", html);
+
       return res.status(200).json({
         status: true,
         message: "Success Send Email Forget Password",
@@ -162,29 +167,39 @@ module.exports = {
       next(error);
     }
   },
-  resetPass: async (req, res, next) => {
+
+  resetPassword: async (req, res, next) => {
     try {
       const { token } = req.query;
-      const { password, passwordConfirmation } = req.body;
-  
-      if (!password || !passwordConfirmation) {
+      const { password, newPassword } = req.body;
+
+      if (!token) {
+        return res.status(400).json({
+          status: false,
+          message: "Token is required!",
+          data: null,
+        });
+      }
+
+      if (!password || !newPassword) {
         return res.status(400).json({
           status: false,
           message: "Both password and password confirmation are required!",
           data: null,
         });
       }
-  
-      if (password !== passwordConfirmation) {
+
+      if (password !== newPassword) {
         return res.status(401).json({
           status: false,
-          message: "Please ensure that the password and password confirmation match!",
+          message:
+            "Please ensure that the password and password confirmation match!",
           data: null,
         });
       }
-  
-      let encryptedPassword = await bcrypt.hash(password, 10);
-  
+
+      let encryptedNewPassword = await bcrypt.hash(password, 10);
+
       jwt.verify(token, JWT_SECRET_KEY, async (err, decoded) => {
         if (err) {
           return res.status(403).json({
@@ -193,44 +208,30 @@ module.exports = {
             data: null,
           });
         }
-  
+
         const updateUser = await prisma.user.update({
           where: { email: decoded.email },
-          data: { password: encryptedPassword },
-          select: { id: true, name: true, email: true } 
+          data: { password: encryptedNewPassword },
+          select: { id: true, name: true, email: true },
         });
 
-        const notification = await prisma.notification.create({
-          data: {
-            title: "Password Changed",
-            message: "Your password has been updated successfully.",
-            createdDate: formattedDate(new Date()),
-            user: { connect: { id: updateUser.id } },
-          },
-        });
-
-        global.io.emit(`user-${updateUser.id}`, notification)
-  
         res.status(200).json({
           status: true,
           message: "Your password has been updated successfully!",
           data: updateUser,
         });
       });
-      
     } catch (error) {
       next(error);
     }
   },
-  
-  // GET Profile
+
   getProfile: async (req, res, next) => {
     try {
       const { id } = req.user;
-
       const user = await prisma.user.findUnique({
         where: { id },
-        select: { id: true, name: true, email: true, bio: true },
+        select: { id: true, name: true, email: true, bio: true, address: true, occupation: true },
       });
 
       if (!user) {
@@ -251,64 +252,121 @@ module.exports = {
     }
   },
 
+  updateProfile: async (req, res, next) => {
+    try {
+      const { id } = req.user;
+      const { name, email, bio, address, occupation } = req.body;
 
-  // UPDATE Profile
-updateProfile: async (req, res, next) => {
-  try {
-    const { id } = req.user;
-    const { name, email, bio } = req.body;
-
-    console.log("User ID dari token:", id);
-    console.log("Data yang dikirim untuk update:", { name, email, bio });
-
-    if (!name && !email && !bio) {
-      return res.status(400).json({
-        status: false,
-        message: "At least one field (name, email, or bio) must be provided.",
-      });
-    }
-
-    if (email) {
-      const existingUser = await prisma.user.findUnique({ where: { email } });
-      if (existingUser && existingUser.id !== id) {
+      if (!name && !email && !bio && !address && !occupation) {
         return res.status(400).json({
           status: false,
-          message: "Email is already in use by another user.",
+          message: "At least one field (name, email, or bio) must be provided.",
         });
       }
+
+      const user = await prisma.user.update({
+        where: { id },
+        data: { name, email, bio, address, occupation },
+        select: { id: true, name: true, email: true, bio: true, address: true, occupation: true }, 
+      });
+
+      res.status(200).json({
+        status: true,
+        message: "Profile updated successfully",
+        data: user,
+      });
+    } catch (error) {
+      next(error);
     }
+  },
 
-    const user = await prisma.user.update({
-      where: { id },
-      data: { name, email, bio },
-      select: { id: true, name: true, email: true, bio: true },
-    });
+  setPassword: async (req, res, next) => {
+    try {
+      const { password } = req.body;
+      const { id } = req.user;
 
-    console.log("User berhasil diupdate:", user);
+      if (!password) {
+        return res.status(400).json({
+          status: false,
+          message: "Password is required",
+        });
+      }
 
-    const notification = await prisma.notification.create({
-      data: {
-        title: "Profile Updated",
-        message: "Your profile information has been updated successfully.",
-        createdDate: new Date().toISOString(),
-        user: { connect: { id: user.id } },
-      },
-    });
+      const hashedPassword = await bcrypt.hash(password, 10);
+      await prisma.user.update({ where: { id }, data: { password: hashedPassword } });
 
-    console.log("Notifikasi dibuat:", notification);
+      res.status(200).json({ status: true, message: "Password set successfully." });
+    } catch (error) {
+      next(error);
+    }
+  },
 
-    global.io.emit(`user-${user.id}`, notification);
+  pageLogin: async (req, res, next) => {
+    try {
+      res.render("login-email.ejs");
+    } catch (error) {
+      next(error);
+    }
+  },
 
-    res.status(200).json({
-      status: true,
-      message: "Profile updated successfully",
-      data: user,
-    });
-  } catch (error) {
-    console.error("Error saat update profile:", error);
-    next(error);
-  }
-},
+  forgetPass: async (req, res, next) => {
+    try {
+      const { email } = req.body;
+      const findUser = await prisma.user.findUnique({ where: { email } });
 
+      if (!findUser) {
+        return res.status(404).json({
+          status: false,
+          message: "user not found",
+          data: null,
+        });
+      }
+      const token = jwt.sign({ email: findUser.email }, JWT_SECRET_KEY);
+      const html = await nodemailer.getHTML("reset-confirmation.ejs", {
+        name: findUser.name,
+        url: `${req.protocol}://${req.get(
+          "host"
+        )}/api/v1/reset-password?token=${token}`,
+      });
+      await nodemailer.sendMail(email, "Reset your password here!", html);
+      return res.status(200).json({
+        status: true,
+        message: "Success Send Email Forget Password",
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
 
+  pageForgetPass: async (req, res, next) => {
+    try {
+      res.render("forget-pass.ejs");
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  pageResetPass: async (req, res, next) => {
+    try {
+      let { token } = req.query;
+      res.render("reset-pass.ejs", { token });
+    } catch (error) {
+      next(error);
+    }
+  },
+
+  pageNotification: async (req, res, next) => {
+    try {
+      const userId = Number(req.params.id);
+      const notifications = await prisma.notification.findMany({
+        where: { user_id: userId },
+      });
+      res.render("notification-page.ejs", {
+        user_id: userId,
+        notifications: notifications,
+      });
+    } catch (error) {
+      next(error);
+    }
+  },
 };

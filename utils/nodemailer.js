@@ -18,10 +18,23 @@ const oauth2Client = new google.auth.OAuth2(
 
 oauth2Client.setCredentials({ refresh_token: GOOGLE_REFRESH_TOKEN });
 
+async function getAccessToken() {
+  try {
+    const { token } = await oauth2Client.getAccessToken();
+    if (!token) {
+      throw new Error("Failed to obtain access token");
+    }
+    return token;
+  } catch (error) {
+    console.error("Error fetching access token:", error.message);
+    throw new Error("Access token retrieval failed");
+  }
+}
+
 module.exports = {
   sendMail: async (to, subject, html) => {
     try {
-      const accessToken = await oauth2Client.getAccessToken();
+      const accessToken = await getAccessToken();
 
       const transport = nodemailer.createTransport({
         service: "gmail",
@@ -35,16 +48,16 @@ module.exports = {
         },
       });
 
-      await transport.sendMail({
-        from: `"Your App Name" <${GOOGLE_SENDER_EMAIL}>`,
+      const info = await transport.sendMail({
+        from: `"Cihuy App!" <${GOOGLE_SENDER_EMAIL}>`,
         to,
         subject,
         html,
       });
 
-      console.log(`Email berhasil dikirim ke ${to}`);
+      console.log(`Email berhasil dikirim ke ${to}: ${info.messageId}`);
     } catch (error) {
-      console.error("Gagal mengirim email:", error);
+      console.error("Gagal mengirim email:", error.message);
     }
   },
 

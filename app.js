@@ -64,6 +64,10 @@ app.use((err, req, res, next) => {
   });
 });
 
+app.get("/", (req, res) => {
+  res.send("<h1>✅ Backend is running</h1>");
+});
+
 server.listen(PORT, () => console.log("Listening on port", PORT));
 
 module.exports = app;
