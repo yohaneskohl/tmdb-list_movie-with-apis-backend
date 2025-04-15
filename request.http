@@ -9,7 +9,7 @@ Content-Type: application/json
 }
 
 ### Create User
-POST https://tmdb-list-movie-with-apis-backend.vercel.app/api/v1/auth/register
+POST https://tmdb-list-movie-with-apis-backend-getpj26wc.vercel.app/api/v1/auth/register
 Content-Type: application/json
 
 {
@@ -32,7 +32,7 @@ GET http://localhost:3000/api/v1/auth/authenticate
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJrZXZpbnlvaGFuZXN0ZWVuQGdtYWlsLmNvbSIsIm5hbWUiOiJLZXZpbiBZb2hhbmVzIiwiaWF0IjoxNzQyNzQ4MTU5LCJleHAiOjE3NDMzNTI5NTl9.X5q4-DNUgmGUBm7hBnSSSrFZ-rmvRlaKPaKCW8Ha5Ps
 
 ### Get all user
-GET http://localhost:3000/api/v1/users
+GET https://tmdb-list-movie-with-apis-back-git-7c6cd9-yohaneskohls-projects.vercel.app/api/v1/users
 
 ### Get all user by search
 GET http://localhost:3000/api/v1/users?search=kevin
