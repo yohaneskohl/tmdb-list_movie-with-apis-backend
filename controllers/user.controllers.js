@@ -1,8 +1,12 @@
 const { PrismaClient } = require("@prisma/client");
+const path = require("path");
 const prisma = new PrismaClient();
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const nodemailer = require("../utils/nodemailer");
+const imagekit = require("../utils/imagekit");
+// const { image } = require("../middlewares/multer"); // sesuaikan path-nya
+const {image } = require("../utils/multer");
 // const { formattedDate } = require("../utils/formattedDate");
 
 const { JWT_SECRET_KEY } = process.env;
@@ -231,7 +235,7 @@ module.exports = {
       const { id } = req.user;
       const user = await prisma.user.findUnique({
         where: { id },
-        select: { id: true, name: true, email: true, bio: true, address: true, occupation: true },
+        select: { id: true, name: true, email: true, bio: true, address: true, occupation: true, avatar_url: true },
       });
 
       if (!user) {
@@ -256,24 +260,57 @@ module.exports = {
     try {
       const { id } = req.user;
       const { name, email, bio, address, occupation } = req.body;
+      const avatar = req.file; 
+      console.log("Received fields:", { name, email, bio, address, occupation, avatar });
 
-      if (!name && !email && !bio && !address && !occupation) {
+      if (!name && !email && !bio && !address && !occupation && !avatar) {
         return res.status(400).json({
           status: false,
-          message: "At least one field (name, email, or bio) must be provided.",
+          message: "At least one field must be provided.",
         });
       }
 
-      const user = await prisma.user.update({
+      let avatar_url;
+
+      if (avatar) {
+        const strFile = avatar.buffer.toString("base64");
+        const ext = path.extname(avatar.originalname);
+        const fileName = `avatar-${id}-${Date.now()}${ext}`;
+
+        const uploadResult = await imagekit.upload({
+          file: strFile,
+          fileName,
+          folder: "/avatars",
+        });
+
+        avatar_url = uploadResult.url;
+      }
+
+      const updatedUser = await prisma.user.update({
         where: { id },
-        data: { name, email, bio, address, occupation },
-        select: { id: true, name: true, email: true, bio: true, address: true, occupation: true }, 
+        data: {
+          name,
+          email,
+          bio,
+          address,
+          occupation,
+          ...(avatar_url && { avatar_url }), // hanya update kalau ada avatar baru
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          bio: true,
+          address: true,
+          occupation: true,
+          avatar_url: true,
+        },
       });
 
       res.status(200).json({
         status: true,
-        message: "Profile updated successfully",
-        data: user,
+        message: "Profile updated successfully.",
+        data: updatedUser,
       });
     } catch (error) {
       next(error);
