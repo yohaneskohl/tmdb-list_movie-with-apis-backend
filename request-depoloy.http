@@ -1,0 +1,15 @@
+###123
+POST https://tmdb-list-movie-with-apis-backend.vercel.app/api/v1/auth/register
+Content-Type: application/json
+
+{
+    "name": "user",
+    "email": "user@gmail.com",
+    "password": "123"
+}
+
+###123
+GET https://tmdb-list-movie-with-apis-backend.vercel.app/api/v1/users
+
+###123
+GET http://localhost:3000/api/v1/users
