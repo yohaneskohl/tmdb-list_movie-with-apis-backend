@@ -32,7 +32,7 @@ GET http://localhost:3000/api/v1/auth/authenticate
 Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJrZXZpbnlvaGFuZXN0ZWVuQGdtYWlsLmNvbSIsIm5hbWUiOiJLZXZpbiBZb2hhbmVzIiwiaWF0IjoxNzQyNzQ4MTU5LCJleHAiOjE3NDMzNTI5NTl9.X5q4-DNUgmGUBm7hBnSSSrFZ-rmvRlaKPaKCW8Ha5Ps
 
 ### Get all user
-GET http://localhost:3000/api/v1/users
+GET https://tmdb-list-movie-with-apis-back-git-7c6cd9-yohaneskohls-projects.vercel.app/api/v1/users
 
 ### Get all user by search
 GET http://localhost:3000/api/v1/users?search=kevin
@@ -60,7 +60,7 @@ GET http://localhost:3000/api/v1/auth/google/callback
 ### Set password
 POST http://localhost:3000/api/v1/set-password
 Content-Type: application/json
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiZW1haWwiOiJrZXZpbnlvaGFuZXN0ZWVuQGdtYWlsLmNvbSIsIm5hbWUiOiJLZXZpbiBZb2hhbmVzIiwiaWF0IjoxNzQyNzQ4MTU5LCJleHAiOjE3NDMzNTI5NTl9.X5q4-DNUgmGUBm7hBnSSSrFZ-rmvRlaKPaKCW8Ha5Ps
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwibmFtZSI6InVzZXIiLCJlbWFpbCI6InVzZXJAZ21haWwuY29tIiwiYmlvIjoidGVzIiwiYWRkcmVzcyI6InRlcyIsIm9jY3VwYXRpb24iOiJwZWxhamFyIiwiYXZhdGFyX3VybCI6Imh0dHBzOi8vaWsuaW1hZ2VraXQuaW8vems1b2RsdnpneC9hdmF0YXJzL2F2YXRhci0xLTE3NDUzMTExOTYyMTZfYWktZ0RlUi1TLmpwZWciLCJnb29nbGVpZCI6bnVsbCwiY3JlYXRlZEF0IjoiMjAyNS0wNC0yMVQwNDo0NToyMC42MTdaIiwidXBkYXRlZEF0IjoiMjAyNS0wNC0yMlQxMjoxODowNy4xODRaIiwiaWF0IjoxNzQ1MzgwMDQ1fQ.E7G6bsQOY9p0s-9uY1jF4bbDY66w1NS2G3_mTbmsASs
 
 {
     "password": "123"
